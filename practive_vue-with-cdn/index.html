@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Vue Router</title>
+  </head>
+  <body>
+    <div id="app">
+      <h1>Hello App!</h1>
+      <p>
+        <!-- use router-link component for navigation. -->
+        <!-- specify the link by passing the `to` prop. -->
+        <!-- `<router-link>` will be rendered as an `<a>` tag by default -->
+        <router-link to="/">Home</router-link>
+        <router-link to="/about">About</router-link>
+        <router-link to="/kelas">Kelas</router-link>
+      </p>
+      <router-view
+        v-bind:items="kelas"
+        v-on:submitkelas="submitkelas"
+        v-on:hapuskelas="hapuskelas"
+      ></router-view>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/vue@2.6.12"></script>
+    <script src="https://unpkg.com/vue-router/dist/vue-router.js"></script>
+    <script src="https://unpkg.com/uuid@latest/dist/umd/uuidv4.min.js"></script>
+    <script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
+
+    <!-- The core Firebase JS SDK is always required and must be listed first -->
+    <script src="https://www.gstatic.com/firebasejs/8.2.3/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.2.3/firebase-database.js"></script>
+
+    <!-- TODO: Add SDKs for Firebase products that you want to use
+     https://firebase.google.com/docs/web/setup#available-libraries -->
+
+    <script>
+      // Your web app's Firebase configuration
+      var firebaseConfig = {
+        apiKey: "AIzaSyCUKDKTic63U8z_wsFvqh-CmPkjdX_Bbtg",
+        authDomain: "testing-vue-47dc0.firebaseapp.com",
+        projectId: "testing-vue-47dc0",
+        storageBucket: "testing-vue-47dc0.appspot.com",
+        messagingSenderId: "893425586082",
+        appId: "1:893425586082:web:3cfb12b0e6c96ef20d2cfb",
+      };
+      // Initialize Firebase
+      firebase.initializeApp(firebaseConfig);
+      const db = firebase.database();
+
+      const dbKelas = db.ref("kelas");
+    </script>
+
+    <script>
+      const KEY_KELAS = "@kelas";
+      const Home = {
+        template: "<div>Home</div>",
+      };
+
+      const About = {
+        template: "<div>About</div>",
+      };
+
+      const Kelas = {
+        props: ["items"],
+        template: `<div>
+            <h3>Tambah Kelas</h3>
+
+            <form @submit.prevent="submitkelas">
+              <div class="input-group">
+                <label>Nama Kelas: </label><br/>
+                <input type="text" v-model="kelas.judul" placeholder="Nama Kelas"/>
+                <div v-if="error.judul"><small style="color: red">{{error.judul}}</small></div>
+              </div>
+              <br/>
+              <div class="input-group">
+                <label>Deskripsi: </label><br/>
+                <textarea v-model="kelas.deskripsi"/>
+                <div v-if="error.deskripsi"><small style="color: red">{{error.deskripsi}}</small></div>
+              </div><br/>
+              <div class="input-group">
+                <label>Masukkan Gambar: </label><br/>
+                <input type="file" ref="gambar" v-on:change="upload"/>
+                <br/>
+                <br/>
+                <img width="80" v-bind:src="previewimg" v-if="previewimg"/>
+              </div>
+              <br/>
+              <button type="submit ">Submit</button>
+            </form>
+            <hr/>
+
+            <h3>Daftar Kelas ({{items.length}})</h3>
+            <template v-if="items.length">
+                <ul>
+                    <li v-for="(item, index) of items">
+                      <img :src="url_gambar(item.gambar)" height="80"/>
+                      <p>{{index+1}} - {{item.judul}} <a href="" v-on:click.prevent="$emit('hapuskelas', item.id)">hapus</a>
+                      <router-link :to="'/kelas/' + item. id">Lihat Kelas</router-link>
+                      </p>
+
+                    </li>
+                </ul>
+            </template>
+            
+          </div>`,
+        data: function () {
+          return {
+            kelas: {
+              judul: "",
+              deskripsi: "",
+              gambar: "",
+            },
+            previewimg: "",
+            error: {
+              judul: "",
+              deskripsi: "",
+            },
+          };
+        },
+        methods: {
+          submitkelas: function () {
+            this.error.judul = "";
+            this.error.deskripsi = "";
+            if (!this.kelas.judul) {
+              return (this.error.judul = "Judul is required");
+            }
+
+            if (!this.kelas.deskripsi) {
+              return (this.error.deskripsi = "Deskripsi is required");
+            }
+
+            if (this.kelas.judul && this.kelas.deskripsi) {
+              const data = {
+                ...this.kelas,
+                id: uuidv4(),
+              };
+              this.$emit("submitkelas", data);
+              this.kelas = {
+                judul: "",
+                deskripsi: "",
+                gambar: "",
+              };
+              this.previewimg = "";
+              this.$refs.gambar.value = "";
+            }
+          },
+          upload: function (event) {
+            const files = event.target.files[0];
+            this.kelas.gambar = files.name;
+            this.previewimg = URL.createObjectURL(files);
+          },
+          url_gambar: function (gambar) {
+            return "images/" + gambar;
+          },
+        },
+      };
+
+      const DetailKelas = {
+        template: `
+          <div>
+            <img :src="url_gambar(detailKelas.gambar)" width="200"/>
+            <h3>{{detailKelas.judul}}</h3>
+            <p>{{detailKelas.deskripsi}}</p>
+            <router-link to="/kelas">kembali</router-link>
+          </div>
+        `,
+        data() {
+          return {
+            detailKelas: {},
+          };
+        },
+        created() {
+          this.filterkelas();
+        },
+        methods: {
+          filterkelas() {
+            const semuaKelas = JSON.parse(localStorage.getItem(KEY_KELAS));
+            const idTerpilih = this.$route.params.id;
+            const kelasTerpilih = semuaKelas.find(
+              (kelas) => kelas.id == idTerpilih
+            );
+            this.detailKelas = kelasTerpilih;
+          },
+          url_gambar: function (gambar) {
+            return "../images/" + gambar;
+          },
+        },
+      };
+
+      const NotFound = {
+        template: "<div>Halaman tidak ditemukan...</div>",
+      };
+
+      const routes = [
+        { path: "/", component: Home },
+        { path: "/about", component: About },
+        { path: "/kelas", component: Kelas },
+        { path: "/kelas/:id", component: DetailKelas },
+        { path: "*", component: NotFound },
+      ];
+      const router = new VueRouter({
+        mode: "history",
+        routes,
+      });
+
+      Vue.config.devtools = true;
+
+      const vm = new Vue({
+        el: "#app",
+        router,
+        component: {
+          home: Home,
+        },
+        data: {
+          kelas: [],
+        },
+        created() {
+          // this.kelas = JSON.parse(localStorage.getItem(KEY_KELAS)) || [];
+          dbKelas.on("value", this.resultData, this.errorData);
+        },
+        methods: {
+          resultData(items) {
+            console.log(items.val());
+            items.forEach((item) => {
+              this.kelas.push(item.val());
+            });
+          },
+          errorData(error) {
+            console.log(error, "ERROR GET DATA");
+          },
+          hapuskelas: function (id) {
+            this.kelas = this.kelas.filter((item) => item.id !== id);
+            localStorage.setItem(KEY_KELAS, JSON.stringify(this.kelas));
+            swal("Delete!!!", `Aww you are delete the class :(`, "warning");
+          },
+          submitkelas: function (data) {
+            this.kelas.push(data);
+            localStorage.setItem(KEY_KELAS, JSON.stringify(this.kelas));
+            swal("Good job!", "You are awesome!", "success");
+          },
+        },
+      });
+    </script>
+  </body>
+</html>

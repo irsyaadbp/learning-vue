@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Vue Beginners</title>
+
+    <style>
+      .active {
+        background-color: aqua;
+        border: 0;
+        padding: 5px;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="app">
+      <header>
+        <h1>{{namaLengkap}}</h1>
+      </header>
+
+      <!-- Test computed -->
+      <h2>{{bilangan}}</h2>
+      <p>
+        Bilangan ini adalah bilangan
+        <strong>{{infoBilangan}}</strong>
+      </p>
+      <button @click="handleClick">Tambah</button>
+
+      <!-- Test Directive -->
+      <h3 v-text="name"></h3>
+      <h3 v-text="name" v-once></h3>
+
+      <input type="text" v-model="name" />
+      <template v-if="kelas.length > 0">
+        <ul>
+          <li v-for="(k, i) of kelas">{{i+1}} - {{k}}</li>
+        </ul>
+      </template>
+
+      <p v-show="kelas.length > 0">Mantab</p>
+      <p v-if="kelas.length === 0">Silahkan pilih kelasmu</p>
+      <p v-else>Jumlah kelasmu ({{kelas.length}})</p>
+      <p>{{kelas}}</p>
+
+      <div>
+        <label>
+          <input type="checkbox" value="React" v-model="kelas" /> React
+        </label>
+        <label><input type="checkbox" value="Vue" v-model="kelas" /> Vue</label>
+        <label>
+          <input type="checkbox" value="Angular" v-model="kelas" />
+          Angular
+        </label>
+      </div>
+
+      <h3 v-html="link"></h3>
+
+      <!-- Binding Atrributes -->
+      <img :src="gambar" />
+      <p>The progresive Javascript framework</p>
+
+      <!-- Class Binding (v-bind)-->
+      <button :class="{active: menu === 'home'}" @click="handleMenu('home')">
+        Home
+      </button>
+      <button :class="{active: menu === 'about'}" @click="handleMenu('about')">
+        About
+      </button>
+      <button :class="{active: menu === 'blog'}" @click="handleMenu('blog')">
+        Blog
+      </button>
+      <h3>Mencari Bilangan Genap dari {{numbers}}</h3>
+      <ul>
+        <li v-for="n of cariBilanganGenap(numbers)">{{n}}</li>
+      </ul>
+    </div>
+
+    <!-- Load Javascript -->
+    <!-- Vuejs -->
+    <script src="https://cdn.jsdelivr.net/npm/vue@2.6.12"></script>
+    <script>
+      const vm = new Vue({
+        el: "#app",
+        data: {
+          name: "Bakso boraks",
+          message: "Hello world",
+          qty: 1,
+          namaDepan: "Irsyaad",
+          namaBelakang: "Budi",
+          bilangan: 6,
+          link: '<a href="#">Mantab</a>',
+          gambar: "images/logo.png",
+          menu: "home",
+          kelas: [],
+          numbers: [1, 2, 3, 4, 5],
+        },
+        methods: {
+          getName: function () {
+            return `Hello ${this.name}`;
+          },
+          changeName: function (newName) {
+            this.name = newName;
+            return this.getName();
+          },
+          methodTotalBayar: function () {
+            return this.qty * 10000;
+          },
+          handleClick: function () {
+            this.bilangan++;
+          },
+          handleMenu: function (nameMenu) {
+            this.menu = nameMenu;
+          },
+          cariBilanganGenap: function (data) {
+            return data.filter((n) => n % 2 === 0);
+          },
+        },
+        computed: {
+          computedTotalBayar: function () {
+            return this.qty * 10000;
+          },
+          namaLengkap: function () {
+            return this.namaDepan + " " + this.namaBelakang;
+          },
+          infoBilangan: function () {
+            return this.bilangan % 2 === 0 ? "Genap" : "Ganjil";
+          },
+        },
+      });
+    </script>
+  </body>
+</html>
